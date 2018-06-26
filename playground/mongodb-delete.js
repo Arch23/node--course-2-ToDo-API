@@ -31,11 +31,11 @@ MongoClient.connect('mongodb://localhost:27017/ToDoApp',(err,client) => {
     //     console.log(result);
     // });
 
-    db.collection('Users').deleteOne({
-        _id: new ObjectID('5b310d28cc933d1359e7f643')
-    }).then((result) => {
-        console.log(result);
-    });
+    // db.collection('Users').deleteOne({
+    //     _id: new ObjectID('5b310d28cc933d1359e7f643')
+    // }).then((result) => {
+    //     console.log(result);
+    // });
 
     //close client not db
     // client.close();
