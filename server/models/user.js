@@ -11,7 +11,7 @@ var UserSchema = new mongoose.Schema({
         trim: true,
         minlength: 1,
         unique: true,
-        validate:{
+        validate: {
             validator: validator.isEmail,
             message: '{value} is not a valid email'
         }
@@ -33,59 +33,75 @@ var UserSchema = new mongoose.Schema({
     }]
 });
 
-UserSchema.methods.toJSON = function(){
+UserSchema.methods.toJSON = function () {
     var userOject = this.toObject();
 
-    return _.pick(userOject,['_id','email']);
+    return _.pick(userOject, ['_id', 'email']);
 };
 
 //instance methods, have to user function because arrow function dont bind this keyword
-UserSchema.methods.generateAuthToken = function() {
+UserSchema.methods.generateAuthToken = function () {
     var access = 'auth';
-    var token = jwt.sign({_id:this._id.toHexString(), access},'abc123');
+    var token = jwt.sign({ _id: this._id.toHexString(), access }, 'abc123');
 
     this.tokens = this.tokens.concat([{
         access,
         token
     }]);
 
-    return this.save().then(()=>{
+    return this.save().then(() => {
         return token;
     });
 };
 
 //method for User, not instance
-UserSchema.statics.findByToken = function(token){
+UserSchema.statics.findByToken = function (token) {
     var decoded;
 
-    try{
-        decoded = jwt.verify(token,'abc123');
-    }catch(e){
+    try {
+        decoded = jwt.verify(token, 'abc123');
+    } catch (e) {
         return Promise.reject();
     }
 
     return User.findOne({
-      '_id': decoded._id,
-      'tokens.token': token,
-      'tokens.access': 'auth'  
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
     })
 };
 
-UserSchema.pre('save',function(next){
-    if(this.isModified('password')){
+UserSchema.statics.findByCredentials = function (email, password) {
+    return User.findOne({
+        email
+    }).then((user) => {
+        if (!user) {
+            return Promise.reject();
+        }
+
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password,user.password, (err,res)=>{
+                return res?resolve(user):reject();
+            });
+        });
+    });
+};
+
+UserSchema.pre('save', function (next) {
+    if (this.isModified('password')) {
         //async, so you have to call next after the hashing is over
-        bcrypt.genSalt(10,(err,salt)=>{
-            bcrypt.hash(this.password,salt,(err,hash)=>{
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(this.password, salt, (err, hash) => {
                 this.password = hash;
                 next();
             });
         });
-    }else{
+    } else {
         next();
     }
 });
 
-var User = mongoose.model('User',UserSchema);
+var User = mongoose.model('User', UserSchema);
 
 module.exports = {
     User
