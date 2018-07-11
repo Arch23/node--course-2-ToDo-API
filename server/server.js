@@ -96,7 +96,7 @@ app.patch('/todos/:id', authenticate, (req, res)=>{
         body.completedAt = null;
     }
 
-    //$new: true - return the updated object, not the original
+    //new: true - return the updated object, not the original
     ToDo.findOneAndUpdate({
         _id: id,
         _creator: req.user._id
