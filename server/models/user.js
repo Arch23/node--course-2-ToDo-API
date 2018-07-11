@@ -41,7 +41,7 @@ UserSchema.methods.toJSON = function(){
 //instance methods, have to user function because arrow function dont bind this keyword
 UserSchema.methods.generateAuthToken = function() {
     var access = 'auth';
-    var token = jwt.sign({_id:this._id.toHexString(), access},'abc123').toString();
+    var token = jwt.sign({_id:this._id.toHexString(), access},'abc123');
 
     this.tokens = this.tokens.concat([{
         access,
@@ -51,6 +51,23 @@ UserSchema.methods.generateAuthToken = function() {
     return this.save().then(()=>{
         return token;
     });
+};
+
+//method for User, not instance
+UserSchema.statics.findByToken = function(token){
+    var decoded;
+
+    try{
+        decoded = jwt.verify(token,'abc123');
+    }catch(e){
+        return Promise.reject();
+    }
+
+    return User.findOne({
+      '_id': decoded._id,
+      'tokens.token': token,
+      'tokens.access': 'auth'  
+    })
 };
 
 var User = mongoose.model('User',UserSchema);
