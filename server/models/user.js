@@ -87,6 +87,17 @@ UserSchema.statics.findByCredentials = function (email, password) {
     });
 };
 
+UserSchema.methods.removeToken = function(token){
+    return this.update({
+        //remove the token that match from the tokens array
+        $pull:{
+            tokens:{
+                token
+            }
+        }
+    });
+};
+
 UserSchema.pre('save', function (next) {
     if (this.isModified('password')) {
         //async, so you have to call next after the hashing is over
